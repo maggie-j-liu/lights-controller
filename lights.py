@@ -1,20 +1,6 @@
-import board
-import neopixel
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
+from utils import pixels, db
 import atexit
 import time
-
-cred = credentials.Certificate("firebase-service-account.json")
-
-firebase_admin.initialize_app(cred, {
-	"databaseURL": "https://lightss-default-rtdb.firebaseio.com"
-})
-
-pixels = neopixel.NeoPixel(
-	board.D18, 50, brightness=1, auto_write=False, pixel_order=neopixel.RGB
-)
 
 colors = {
 	"r": 0,
@@ -35,7 +21,7 @@ def gradualChange(to):
 		current["g"] += (to["g"] - colors["g"]) / steps
 		current["b"] += (to["b"] - colors["b"]) / steps
 		updateLights(current)
-		time.sleep(0.01)
+		time.sleep(0.005)
 	colors = to
 
 def handleChange(event):
@@ -61,9 +47,6 @@ listener = ref.listen(handleChange)
 db.reference("on").set(True)
 
 def exit_handler():
-	pixels = neopixel.NeoPixel(
-		board.D18, 50, pixel_order=neopixel.RGB
-	)
 	pixels.deinit()
 	print("turned lights off")
 	db.reference("on").set(False)
