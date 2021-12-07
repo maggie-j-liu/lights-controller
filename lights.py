@@ -16,9 +16,12 @@ rainbow_thread = None
 prev_change = 0
 
 def change():
-	print("change")
-	time.sleep(30)
-	if not rainbow_thread and time.time() - prev_change > 19500:
+	interval = 30
+	# print("change")
+	time.sleep(interval)
+	# print(time.time())
+	# print(prev_change)
+	if not rainbow_thread and time.time() - prev_change > interval - 0.5:
 		db.reference("color").update({
 			"r": random.randint(0, 255),
 			"g": random.randint(0, 255),
@@ -47,7 +50,7 @@ def gradual_change(to):
 
 def handle_change(event):
 	print(event.data)
-	global colors, rainbow_thread, rainbow
+	global colors, rainbow_thread, rainbow, prev_change
 	new_colors = colors.copy()
 	if event.path == "/":
 		new_colors["r"] = event.data["r"]
