@@ -3,6 +3,7 @@ import atexit
 import time
 from rainbow import rainbow_cycle
 import threading
+import random
 
 colors = {
 	"r": 0,
@@ -12,6 +13,17 @@ colors = {
 }
 
 rainbow_thread = None
+prev_change = 0
+
+def change():
+	print("change")
+	time.sleep(30)
+	if not rainbow_thread and time.time() - prev_change > 19500:
+		db.reference("color").update({
+			"r": random.randint(0, 255),
+			"g": random.randint(0, 255),
+			"b": random.randint(0, 255)
+		})
 
 def rainbow_loop():
 	while colors["rainbow"]:
@@ -34,10 +46,15 @@ def gradual_change(to):
 	colors = to
 
 def handle_change(event):
+	print(event.data)
 	global colors, rainbow_thread, rainbow
 	new_colors = colors.copy()
 	if event.path == "/":
-		new_colors = event.data
+		new_colors["r"] = event.data["r"]
+		new_colors["g"] = event.data["g"]
+		new_colors["b"] = event.data["b"]
+		# print("rainbow" in event.data)
+		new_colors["rainbow"] = event.data["rainbow"] if "rainbow" in event.data else colors["rainbow"]
 	elif event.path == "/r":
 		new_colors["r"] = event.data
 	elif event.path == "/g":
@@ -50,8 +67,10 @@ def handle_change(event):
 		print("undefined")
 		print(event.data, event.event_type, event.path)
 		return
-
-	print(new_colors)
+	prev_change = time.time()
+	change_thread = threading.Thread(target=change)
+	change_thread.start()
+	# print(new_colors)
 	if new_colors["rainbow"] and not colors["rainbow"]:
 		colors["rainbow"] = True
 		rainbow_thread = threading.Thread(target=rainbow_loop)
